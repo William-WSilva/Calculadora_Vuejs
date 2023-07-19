@@ -5,24 +5,29 @@
         <div class="calculadora__registrar">
             <input
                 type="text"
-                :class="{ active: inputActive === 0 }"
+                :class="{ active: inputActive === 0, numNegativo: inputNegativo }"
                 class="calculadora__registrar__inputs"
                 v-model="input0"
                 @click="setInputActive(0)"
                 @input="atualizarResultado"
+                @keydown="validarEntradaNumerica"
+                
             >
             <span class="operacao">{{ operador }}</span>
             <input
                 type="text"
-                :class="{ active: inputActive === 1 }"
+                :class="{ active: inputActive === 1, numNegativo: inputNegativo }"
                 class="calculadora__registrar__inputs"
                 v-model="input1"
                 @click="setInputActive(1)"
                 @input="atualizarResultado"
+                @keydown="validarEntradaNumerica"
+                ref='inputFoco'
             >
         </div>
         <div class="calculadora__resultados">
-            <span class="calculadora__resultados__valor">{{ resultado }}</span>
+            <span class="calculadora__resultados__valor" 
+            :class="{ numNegativo: resultadoNegativo }">{{ resultado }}</span>
         </div>
         
         <div class="calculadora__bg">
@@ -38,8 +43,10 @@
                     <option value="*">Multiplicar</option>
                     <option value="/">Dividir</option>
                 </select>
-                <img class="calculadora__bg__operacoes__select__historico" src="./images/Historico.png" alt=""
-                @click="abrirFecharHistorico"
+                <img class="calculadora__bg__operacoes__select__historico"
+                    :class="{ active: historico }"
+                    src="./images/Historico.png" alt=""
+                    @click="abrirFecharHistorico"
                 >
 
                 <div class="calculadora__bg__operacoes__select__historico__list"
@@ -89,59 +96,41 @@ const resultado = ref(0);
 const input0 = ref('');
 const input1 = ref('');
 const historicoList = ref([]);
+const inputFoco = ref(null);
+let resultadoNegativo = ref(false);
+let inputNegativo = ref(false);
+let calculo = 0;
 
 
-// ======= Eventos ======= //
+
+// ===================== Eventos ===================== //
+
+// ======= Assistir eventos nos inputs e troca de operadores ======= //
 watch(operador, (newValue, oldValue) => {
   atualizarResultado();
 });
 
 watch(input0, (newValue, oldValue) => {
-  atualizarResultado();
+    atualizarResultado();
+    resultadoNegativo = resultado.value < 0 ? true : false;
+    inputNegativo = input0.value < 0 ? true : false;
 });
 
 watch(input1, (newValue, oldValue) => {
-  atualizarResultado();
+    atualizarResultado();
+    resultadoNegativo = resultado.value < 0 ? true : false;
+    inputNegativo = input1.value < 0 ? true : false;
 });
 
 
-function gerarHistorico() {
-    const novoHistoricoItem = `${input0.value} ${operador.value} ${input1.value} = ${resultado.value}`;
-    historicoList.value.push(novoHistoricoItem);
-}
 
+// ===================== Funções ===================== //
 
-function atualizarResultado(){
-    const valorInput0 = parseFloat(input0.value);
-    const valorInput1 = parseFloat(input1.value);
-
-    // console.log(`${valorInput0} ${operador.value} ${valorInput1}`);
-    switch (operador.value) {
-        case '+':
-          resultado.value = valorInput0 + valorInput1;
-          resultado.value = isFinite(resultado.value)  ? resultado.value.toFixed(2) : 0
-        break;
-        case '-':
-          resultado.value = valorInput0 - valorInput1;
-          resultado.value = isFinite(resultado.value)  ? resultado.value.toFixed(2) : 0
-        break;
-        case '*':
-          resultado.value = valorInput0 * valorInput1;
-          resultado.value = isFinite(resultado.value)  ? resultado.value.toFixed(2) : 0
-        break;
-        case '/':
-          resultado.value = valorInput0 / valorInput1;
-          resultado.value = isFinite(resultado.value)  ? resultado.value.toFixed(2) : 0
-        break;
-        default:
-          resultado.value = 0;
-    }
-}
-
+// ======= Validar botões clicados, executar ações e input de valores ======= //
 function btnPress(valor) {
-    const operadores = ["+", "-", "*", "/", "C", "CE", "="];
+    const operadoresBtn = ["+", "-", "*", "/", "C", "CE", "="];
     
-    if (operadores.includes(valor)) {
+    if (operadoresBtn.includes(valor)) {
         switch (valor) {
             case "+":
                 operador.value = valor;
@@ -161,8 +150,6 @@ function btnPress(valor) {
             break;
             case "=":
                 gerarHistorico();
-                input0.value = resultado.value;
-                input1.value = "";
             break;
             case "CE":
                 switch (inputActive.value){
@@ -184,17 +171,96 @@ function btnPress(valor) {
         }
     }
 
-    if (!operadores.includes(valor)) {
-        switch (inputActive.value){
-            case 0:
-                input0.value += valor;
-            break;
-            case 1:
-                input1.value += valor;
-            break;
-        }
-        
+    if (!operadoresBtn.includes(valor)) {
+        formatarZeroENegativos(valor);
     }
+}
+
+
+// ======= Validar teclas, executar ações e input de valores ======= //
+function validarEntradaNumerica(event) {
+  const teclaPressionada = event.key;
+  const operadoresTeclado = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', "Backspace", "Delete", "Tab"];
+
+    if (!operadoresTeclado.includes(teclaPressionada)) {
+        event.preventDefault();
+
+        if ([ "+", "-", "*", "/"].includes(teclaPressionada)) {
+            inputActive.value = 1;
+            inputFoco.value.focus();
+            operador.value = teclaPressionada;
+        }else if(teclaPressionada === "Enter" ){
+            gerarHistorico();
+        }
+    }
+}
+
+// ======= Atualiza o resultado sempre que valores inputs são alterados ======= //
+function atualizarResultado(){
+    const valorInput0 = parseFloat(input0.value);
+    const valorInput1 = parseFloat(input1.value);
+    
+    switch (operador.value) {
+        case '+':
+            calculo = valorInput0 + valorInput1;
+            validarNumero(calculo);
+        break;
+        case '-':
+            calculo = valorInput0 - valorInput1;
+            validarNumero(calculo);
+        break;
+        case '*':
+            calculo = valorInput0 * valorInput1;
+            validarNumero(calculo);
+        break;
+        case '/':
+            calculo = valorInput0 / valorInput1;
+            validarNumero(calculo);
+        break;
+    }
+}
+
+// ======= Validar input do tipo numeros e formatar zeros a esqueda ======= //
+function formatarZeroENegativos(valor){
+    const regexZeroAesquerda = /^00+/;   // Expressão regular para mais de 1 zero a esquerda
+    const regexNumero = /^-?\d*\.?\d*$/; // Expressão regular para validar valor numérico ou decimal
+    let valorFormatado = inputActive.value === 0 ? input0.value += valor : input1.value += valor;
+
+    if (!regexNumero.test(valorFormatado)) {
+        valorFormatado = 0; // Limpar o valor do input se não for válido
+    }else if (regexZeroAesquerda.test(valorFormatado)) {
+        valorFormatado = Number(valorFormatado.replace(/^00+/, 0));
+    }
+
+    switch (inputActive.value){
+        case 0:
+            input0.value = valorFormatado
+        break;
+        case 1:
+            input1.value = valorFormatado
+        break;
+    }
+
+    
+}
+
+
+
+function validarNumero(calculo) {
+    if (isFinite(calculo) === true) {
+        resultado.value = calculo.toLocaleString('pt-BR');
+        
+    } else {
+        resultado.value = 0;
+    }
+}
+
+function gerarHistorico() {
+    const novoHistoricoItem = `${input0.value} ${operador.value} ${input1.value} = ${resultado.value}`;
+    historicoList.value.push(novoHistoricoItem);
+
+    input0.value = resultado.value;
+    input1.value = "";
 }
 
 function abrirFecharHistorico() {
@@ -205,6 +271,8 @@ function setInputActive(index) {
   inputActive.value = index;
 }
 </script>
+
+
 
 
 <style scoped>
@@ -297,14 +365,18 @@ function setInputActive(index) {
 
 .calculadora__bg__operacoes__select__historico{
     height: 35px;
+    width: 100%;
     cursor: pointer;
     border-radius: 8px;
+    background-color: #616161;
+    padding: 5px;
+    
 }
 
 .calculadora__bg__operacoes__select__historico:hover{
     background-color: transparent;
     border-radius: 8px;
-    box-shadow:  0px 0px 10px 3px #1c4f73;
+    box-shadow: 0px 0px 10px 5px #1c4f73;
 
 }
 
@@ -343,7 +415,7 @@ function setInputActive(index) {
 }
 
 .calculadora__bg__operacoes__select__historico__list__secao li:hover{
-    box-shadow: 0px 0px 5px 3px #29a8ff;
+    box-shadow: 0px 0px 10px 5px #1c4f73;
 }
 
 .calculadora__bg__operacoes__btn:nth-child(3){
@@ -364,7 +436,6 @@ function setInputActive(index) {
     height: 60px;
     font-size: 24px;
     color: #fff;
-    font-weight: bold;
 }
 
 .calculadora__registrar{
@@ -409,11 +480,12 @@ function setInputActive(index) {
 }
 
 .active{
-    box-shadow: 0px 0px 5px 3px #29a8ff;
+    box-shadow: 0px 0px 10px 5px #1c4f73;
 }
 
 .numNegativo{
     color: red;
+    font-weight: normal;
 }
 
 option:disabled{
