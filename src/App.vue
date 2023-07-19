@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <section class="calculadora">
-            <h1 class="titulo">EBAC</h1>
+            <h1 class="titulo">WS</h1>
             <div class="calculadora__registrar">
                 <input
                   type="text"
