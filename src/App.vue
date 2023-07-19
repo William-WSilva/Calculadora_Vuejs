@@ -87,6 +87,7 @@
 
 
 <script setup>
+// ===================== Importação, variaveis ===================== //
 import { ref, watch } from 'vue';
 
 const historico = ref(false);
@@ -176,11 +177,15 @@ function btnPress(valor) {
     }
 }
 
-
 // ======= Validar teclas, executar ações e input de valores ======= //
 function validarEntradaNumerica(event) {
   const teclaPressionada = event.key;
-  const operadoresTeclado = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', "Backspace", "Delete", "Tab"];
+  const operadoresTeclado = [ "0", '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', "Backspace", "Delete", "Tab"];
+
+    if (teclaPressionada === "0") {
+        event.preventDefault();
+        formatarZeroENegativos(teclaPressionada);
+    }
 
     if (!operadoresTeclado.includes(teclaPressionada)) {
         event.preventDefault();
@@ -193,6 +198,8 @@ function validarEntradaNumerica(event) {
             gerarHistorico();
         }
     }
+
+    
 }
 
 // ======= Atualiza o resultado sempre que valores inputs são alterados ======= //
@@ -222,16 +229,16 @@ function atualizarResultado(){
 
 // ======= Validar input do tipo numeros e formatar zeros a esqueda ======= //
 function formatarZeroENegativos(valor){
-    const regexZeroAesquerda = /^00+/;   // Expressão regular para mais de 1 zero a esquerda
+    const regexZeroAesquerda = /^0+(?!\.)/;   // Expressão regular para mais de 1 zero a esquerda
     const regexNumero = /^-?\d*\.?\d*$/; // Expressão regular para validar valor numérico ou decimal
-    let valorFormatado = inputActive.value === 0 ? input0.value += valor : input1.value += valor;
-
+    let valorFormatado = inputActive.value === 0 ? input0.value + valor.toString() : input1.value + valor.toString();
+    
     if (!regexNumero.test(valorFormatado)) {
-        valorFormatado = 0; // Limpar o valor do input se não for válido
+        valorFormatado = 0;
     }else if (regexZeroAesquerda.test(valorFormatado)) {
-        valorFormatado = Number(valorFormatado.replace(/^00+/, 0));
+        valorFormatado = Number(valorFormatado.replace(regexZeroAesquerda, 0));
     }
-
+    
     switch (inputActive.value){
         case 0:
             input0.value = valorFormatado
@@ -240,12 +247,9 @@ function formatarZeroENegativos(valor){
             input1.value = valorFormatado
         break;
     }
-
-    
 }
 
-
-
+// ======= Validar número  ======= //
 function validarNumero(calculo) {
     if (isFinite(calculo) === true) {
         resultado.value = calculo.toLocaleString('pt-BR');
@@ -255,6 +259,7 @@ function validarNumero(calculo) {
     }
 }
 
+// ======= Gerar hitórico de calculos  ======= //
 function gerarHistorico() {
     const novoHistoricoItem = `${input0.value} ${operador.value} ${input1.value} = ${resultado.value}`;
     historicoList.value.push(novoHistoricoItem);
@@ -263,10 +268,12 @@ function gerarHistorico() {
     input1.value = "";
 }
 
+// ======= Abrir e Fechar seção histórico  ======= //
 function abrirFecharHistorico() {
   historico.value = !historico.value;
 }
 
+// ======= Mapear input ativo  ======= //
 function setInputActive(index) {
   inputActive.value = index;
 }
@@ -281,17 +288,13 @@ function setInputActive(index) {
     padding: 0;
     box-sizing: border-box;
     text-decoration: none;
-
-    /* border: 1px solid gray; */
 }
-
 .container{
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
 .calculadora{
     display: flex;
     flex-direction: column;
@@ -305,13 +308,11 @@ function setInputActive(index) {
     color: #fff;
     font-size: 18px;
 }
-
 .titulo{
     text-align: center;
     width: 320px;
     margin-bottom: 60px;
 }
-
 .calculadora__bg{
     display: flex;
     justify-content: center;
@@ -321,7 +322,6 @@ function setInputActive(index) {
     border-radius: 8px;
     position: relative;
 }
-
 .calculadora__bg__operacoes{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -329,7 +329,6 @@ function setInputActive(index) {
     padding: 20px;
     width: 320px;
 }
-
 .calculadora__bg__operacoes__btn{
     /* width: 64px; */
     height: 35px;
@@ -342,7 +341,6 @@ function setInputActive(index) {
     cursor: pointer;
     
 }
-
 .calculadora__bg__operacoes__btn:hover{
   box-shadow: 0px 0px 10px 5px #1c4f73;
 }
@@ -353,7 +351,6 @@ function setInputActive(index) {
     grid-column: 1 / -1;
     gap: 20px 20px;
 }
-
 .calculadora__bg__operacoes__select__item{
     border-radius: 4px;
     border: none;
@@ -362,7 +359,6 @@ function setInputActive(index) {
     font-size: 22px;
     cursor: pointer;
 }
-
 .calculadora__bg__operacoes__select__historico{
     height: 35px;
     width: 100%;
@@ -372,14 +368,12 @@ function setInputActive(index) {
     padding: 5px;
     
 }
-
 .calculadora__bg__operacoes__select__historico:hover{
     background-color: transparent;
     border-radius: 8px;
     box-shadow: 0px 0px 10px 5px #1c4f73;
 
 }
-
 .calculadora__bg__operacoes__select__historico__list{
     position: absolute;
     top: 0;
@@ -401,33 +395,27 @@ function setInputActive(index) {
     opacity: 1;
     visibility: visible;
 }
-
 .calculadora__bg__operacoes__select__historico__list__secao{
     display: flex;
     flex-direction: column-reverse;
     padding-left: 30px ;
     font-size: 16px;
 }
-
 .calculadora__bg__operacoes__select__historico__list__secao li{
     cursor: default;
     margin: 5px 0;
 }
-
 .calculadora__bg__operacoes__select__historico__list__secao li:hover{
     box-shadow: 0px 0px 10px 5px #1c4f73;
 }
-
 .calculadora__bg__operacoes__btn:nth-child(3){
     grid-column: 2 / 4;
     
 }
-
 .calculadora__bg__operacoes__btn:last-child{
     grid-column: 3 / -1;
     
 }
-
 .calculadora__resultados{
     display: flex;
     justify-content: center;
@@ -437,13 +425,11 @@ function setInputActive(index) {
     font-size: 24px;
     color: #fff;
 }
-
 .calculadora__registrar{
     width: 276px;
     display: flex;
     justify-content: space-between;
 }
-
 .calculadora__registrar__inputs{
     text-align: end;
     width: 100%;
@@ -454,7 +440,6 @@ function setInputActive(index) {
     border: none;
     padding-right: 3px;
 }
-
 .operacao{
     display: flex;
     justify-content: center;
@@ -465,31 +450,25 @@ function setInputActive(index) {
     width: 100px;
     height: 100%;
 }
-
 .btn_tema{
     border: none;
     background-color: #29a8ff;
     color: #fff;
 }
-
 .btn_tema_cinza{
     border: none;
     background-color: #616161;
     color: #fff;
     font-size: 18px;
 }
-
 .active{
     box-shadow: 0px 0px 10px 5px #1c4f73;
 }
-
 .numNegativo{
     color: red;
     font-weight: normal;
 }
-
 option:disabled{
     display: none;
 }
-
 </style>
