@@ -15,7 +15,7 @@ Recursos:
 - Apagar caracteres
 - Limpar Campos
 - Histórico de cálculos
-- Validação númererica
+- Validação númerica
 - Formatação de decimais
 - Formatação de números negativos
 
