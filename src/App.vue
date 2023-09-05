@@ -244,7 +244,10 @@ function formatarZeroENegativos(valor){
 // ======= Validar número  ======= //
 function validarNumero(calculo) {
     if (isFinite(calculo) === true) {
-        resultado.value = calculo.toLocaleString('pt-BR');
+        const calcResult = calculo.toLocaleString('pt-BR');
+        // resultado.value = calculo.toLocaleString('pt-BR');
+        // resultado.value = calcResult.replace(',', '.');  // substituir virgula por ponto
+        resultado.value = calculo;
         
     } else {
         resultado.value = 0;
@@ -257,7 +260,7 @@ function gerarHistorico() {
     historicoList.value.push(novoHistoricoItem);
 
     input0.value = resultado.value;
-    input1.value = "";
+    input1.value = '';
 }
 
 // ======= Abrir e Fechar seção histórico  ======= //
@@ -269,7 +272,11 @@ historico.value = !historico.value;
 function setInputActive(index) {
 inputActive.value = index;
 }
+
+
 </script>
 
 
 <style src="./styles/Calculadora.css"></style>
+
+
