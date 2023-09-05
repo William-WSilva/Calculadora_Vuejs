@@ -245,9 +245,7 @@ function formatarZeroENegativos(valor){
 function validarNumero(calculo) {
     if (isFinite(calculo) === true) {
         const calcResult = calculo.toLocaleString('pt-BR');
-        // resultado.value = calculo.toLocaleString('pt-BR');
-        // resultado.value = calcResult.replace(',', '.');  // substituir virgula por ponto
-        resultado.value = calculo;
+        resultado.value = calculo.toLocaleString('pt-BR');
         
     } else {
         resultado.value = 0;
@@ -259,7 +257,7 @@ function gerarHistorico() {
     const novoHistoricoItem = `${input0.value} ${operador.value} ${input1.value} = ${resultado.value}`;
     historicoList.value.push(novoHistoricoItem);
 
-    input0.value = resultado.value;
+    input0.value = calculo;
     input1.value = '';
 }
 
